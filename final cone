@@ -1,0 +1,142 @@
+#!/bin/bash
+
+create_user()
+{
+  echo -n "Enter username: "
+  read user_name
+
+  # Check if the user already exists
+
+  if sudo id "$user_name" &>/dev/null
+  #/dev/null Redirecting output to it is a way to effectively discard or ignore unwanted information.
+  then
+    echo "Error: User '$user_name' already exists."
+  else
+    echo -n "Enter password for '$user_name': "
+    read -s password
+    echo
+
+    # Create the new user
+    sudo useradd -m -p $(openssl passwd -1 "$password") "$user_name"
+
+    if [ $? -eq 0 ]; then
+      echo "User '$user_name' created successfully."
+    else
+      echo "Error creating user '$user_name'."
+    fi
+  fi
+}
+
+
+
+
+
+
+reset_password()
+{
+  echo -n "Enter username to reset password: "
+  read user_name
+
+  # Check if the user exists
+
+  if sudo id "$user_name" &>/dev/null
+  then
+    echo -n "Enter new password for '$user_name': "
+    #The -n option suppresses this newline, allowing the next output to appear on the same line.
+    read -s new_password
+    #the user's input for the password will not be visible on the screen as they type it due to the use of read -s.
+    echo
+
+    # Reset the password
+    echo "$new_password" | sudo passwd --stdin "$user_name"
+    # The --stdin option indicates that the new password will be provided through the standard input (stdin) rather than prompting the user.
+
+    if [ $? -eq 0 ]
+    then
+      echo "Password for user '$user_name' reset successfully."
+    else
+      echo "Error resetting password for user '$user_name'."
+    fi
+  else
+    echo "Error: User '$user_name' not exists."
+  fi
+}
+
+
+
+
+list_of_users()
+{
+  echo "List of all users:"
+  cut -d: -f1 /etc/passwd
+}
+
+
+
+
+delete_user()
+{
+  echo -n "Enter username to delete: "
+  read user_name
+
+  if sudo id "$user_name" &>/dev/null
+  then
+    sudo userdel -r "$user_name"
+
+ # -r option removes home directory and mail spool
+ # Alternatively, you can use 'sudo deluser --remove-home "$user_name"' with 'deluser' command
+    echo "User '$user_name' deleted successfully."
+  else
+    echo "Error: User '$user_name' not exists."
+  fi
+}
+
+
+
+#help
+
+user_help()
+{
+echo "User Management Console"
+    echo "  -c, --create   Create a new user account"
+    echo "  -d, --delete   Delete an existing  user account"
+    echo "  -r, --reset    Reset a password for an existing user account"
+    echo "  -l, --list     List all users accounts on the system"
+    echo "  -h, --help     Display this  Help and exit"
+
+    echo "Exiting User Management Console."
+            exit 0
+
+
+}
+
+
+
+
+
+#main program
+
+while true
+do
+    echo "User Management Console"
+   echo “Option:”
+    echo "  -c, --create   Create a new user account"
+    echo "  -d, --delete   Delete an existing  user account"
+    echo "  -r, --reset    Reset a password for an existing user account"
+    echo "  -l, --list     List all users accounts on the system"
+    echo "  -h, --help     Display this  Help and exit"
+
+read option
+    case $option in
+        c) create_user ;;
+        d) delete_user ;;
+        r) reset_password ;;
+        l) list_of_users ;;
+        h) user_help ;;
+
+         *)
+            echo "Invalid option. Use -h for help."
+            ;;
+    esac
+done
+
