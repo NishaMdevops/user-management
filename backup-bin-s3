@@ -1,0 +1,20 @@
+#!/bin/bash
+
+# Create variavles
+custom_directory=/root/backup
+
+backup_bin=/bin
+
+backup_bucket=s3://project-backup-17
+
+# Copy system bin file to custom directory
+cp -R "$backup_bin" "$custom_directory"
+
+# Get current date and time
+current_date_time=$(date +"%Y%m%d_%H%M%S")
+
+# Create a tar file with date and time format
+tar -zcvf ${current_date_time}.tar.gz "$custom_directory"
+
+# Copy data to s3 bucket
+aws s3 cp "${current_date_time}.tar.gz" "$backup_bucket"
